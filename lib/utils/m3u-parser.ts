@@ -11,6 +11,10 @@ export interface M3UChannel {
   tvgId?: string;
   tvgName?: string;
   routes?: string[];
+  sourceId?: string;
+  sourceName?: string;
+  httpUserAgent?: string;
+  httpReferrer?: string;
 }
 
 export interface M3UPlaylist {
@@ -38,6 +42,8 @@ export function parseM3U(content: string): M3UPlaylist {
       const tvgLogoMatch = line.match(/tvg-logo="([^"]*)"/i);
       const groupTitleMatch = line.match(/group-title="([^"]*)"/i);
       const tvgIdMatch = line.match(/tvg-id="([^"]*)"/i);
+      const httpUserAgentMatch = line.match(/http-user-agent="([^"]*)"/i);
+      const httpReferrerMatch = line.match(/http-referrer="([^"]*)"/i);
 
       if (tvgNameMatch) channel.tvgName = tvgNameMatch[1];
       if (tvgLogoMatch) channel.logo = tvgLogoMatch[1];
@@ -46,6 +52,8 @@ export function parseM3U(content: string): M3UPlaylist {
         if (channel.group) groupSet.add(channel.group);
       }
       if (tvgIdMatch) channel.tvgId = tvgIdMatch[1];
+      if (httpUserAgentMatch) channel.httpUserAgent = httpUserAgentMatch[1];
+      if (httpReferrerMatch) channel.httpReferrer = httpReferrerMatch[1];
 
       // Extract channel name (after last comma)
       const commaIndex = line.lastIndexOf(',');
@@ -86,7 +94,7 @@ export function groupChannelsByName(channels: M3UChannel[]): M3UChannel[] {
   const groups = new Map<string, M3UChannel>();
 
   for (const ch of channels) {
-    const key = ch.name.toLowerCase().trim();
+    const key = `${ch.sourceId || ''}::${ch.name.toLowerCase().trim()}`;
     const existing = groups.get(key);
     if (existing) {
       if (!existing.routes) {
